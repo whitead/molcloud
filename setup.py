@@ -16,7 +16,7 @@ setup(
     url="https://github.com/whitead/molcloud",
     license="MIT",
     packages=["molcloud"],
-    install_requires=["networkx", "matplotlib", "pygraphviz", "rdkit"],
+    install_requires=["networkx", "matplotlib", "pygraphviz", "rdkit", "click", "tqdm"],
     test_suite="tests",
     long_description=long_description,
     long_description_content_type="text/markdown",

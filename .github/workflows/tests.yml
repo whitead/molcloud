@@ -23,6 +23,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        conda install -y graphviz
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r dev-requirements.txt; fi
     - name: Install
