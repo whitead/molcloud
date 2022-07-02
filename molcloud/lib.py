@@ -1,6 +1,7 @@
 from .version import __version__
 from rdkit.rdBase import BlockLogs
 import networkx as nx
+import pygraphviz
 import matplotlib.pyplot as plt
 import numpy as np
 from rdkit import Chem
@@ -22,8 +23,7 @@ _unknown_color = "#AAAAAA"
 _background_color = "#f5f4e9"
 
 
-def _custom_layout(G, prog, ratio, args):
-    import pygraphviz
+def _custom_layout(G, prog, ratio, args=''):
 
     A = nx.nx_agraph.to_agraph(G)
     A.graph_attr.update(ratio=ratio)
@@ -80,7 +80,7 @@ def plot_molcloud(examples, background_color=_background_color, node_size=10, qu
     c = _colors(G)
     fig = plt.gcf()
     ratio = fig.get_figheight() / fig.get_figwidth()
-    pos = _custom_layout(G, prog="neato", ratio=ratio, args="-Gmaxiter=5000")
+    pos = _custom_layout(G, prog="neato", ratio=ratio)
     nx.draw(G, pos, node_size=node_size, node_color=c)
     ax = plt.gca()
     ax.set_facecolor(background_color)
