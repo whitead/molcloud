@@ -23,7 +23,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        sudo apt-get install libgraphviz-dev
+        sudo apt-get install libgraphviz-dev graphviz
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r dev-requirements.txt; fi
     - name: Install
