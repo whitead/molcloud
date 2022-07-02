@@ -26,9 +26,9 @@ def _custom_layout(G, prog, ratio, args):
     import pygraphviz
 
     A = nx.nx_agraph.to_agraph(G)
+    A.graph_attr.update(ratio=ratio)
+    # A.write("file.dot")
     A.layout(prog=prog, args=args)
-    A.graph_attr.update(ratio=str(ratio))
-    A.write("file.dot")
     node_pos = {}
     for n in G:
         node = pygraphviz.Node(A, n)
