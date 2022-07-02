@@ -5,6 +5,7 @@ on:
   release:
     types:
       - created
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -30,6 +31,7 @@ jobs:
          pytest tests
     - name: Build a binary wheel and a source tarball
       run: |
+        pip install build
         python -m build --sdist --wheel --outdir dist/ .
     - name: Publish distribution 📦 to PyPI
       if:  github.event_name == 'release'
