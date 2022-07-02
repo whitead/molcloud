@@ -2,6 +2,8 @@
 
 ## Install
 
+Make sure you have [pygraphviz installed](https://pygraphviz.github.io/documentation/stable/install.html)
+
 ```sh
 pip install molcloud
 ```
@@ -9,10 +11,16 @@ pip install molcloud
 ## Usage
 
 ```sh
-molcloud [smiles_file] [output_file] --width 10
+molcloud [smiles-file]
 ```
 
-Use `molcloud --help` for complete options. `smiles_file` should contain smiles, one per line like:
+and the output will go to `cloud.png`. You can specify a few things too:
+
+```sh
+molcloud [smiles-file] --output-file [output-file] --width 10 --node-size 25
+```
+
+Use `molcloud --help` for complete options. `smiles-file` should contain smiles, one per line like:
 
 ```plain
 O=C(OC)C=1C=CC2=NC=C(C(=O)OCC)C(NCC(O)C)=C2C1
