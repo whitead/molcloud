@@ -27,7 +27,7 @@ jobs:
         pip install .
     - name: Run Test
       run: |
-         pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+         pytest tests
     - name: Build a binary wheel and a source tarball
       run: |
         python -m build --sdist --wheel --outdir dist/ .
