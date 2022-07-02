@@ -80,7 +80,8 @@ def plot_molcloud(examples, background_color=_background_color, node_size=10, qu
     c = _colors(G)
     fig = plt.gcf()
     ratio = fig.get_figheight() / fig.get_figwidth()
-    pos = _custom_layout(G, prog="neato", ratio=ratio)
+    pos = _custom_layout(G, prog="neato", ratio=ratio,
+                         args="-Gmaxiter=5000 -Gepsilon=0.00001")
     nx.draw(G, pos, node_size=node_size, node_color=c)
     ax = plt.gca()
     ax.set_facecolor(background_color)
