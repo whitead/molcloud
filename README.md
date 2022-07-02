@@ -20,3 +20,7 @@ O=C1C2=NC=CC3=C(OC)C=4OCOC4C(C=5C=C(OC)C(OC)=C(OC)C15)=C23
 ```
 
 Adjust width as you add more molecules. The drawing is always square (sorry).
+
+## Example
+
+![test](https://user-images.githubusercontent.com/908389/176980703-bc814295-ee37-4c41-a31b-6b75bb420659.png)
