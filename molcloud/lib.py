@@ -20,10 +20,10 @@ _atom_colors = {
     53: "#a895bb",
 }
 _unknown_color = "#AAAAAA"
-_background_color = "#f5f4e9"
+background_color = "#f5f4e9"
 
 
-def _custom_layout(G, prog, ratio, args=''):
+def custom_layout(G, prog, ratio, args=''):
 
     A = nx.nx_agraph.to_agraph(G)
     A.graph_attr.update(ratio=ratio)
@@ -67,7 +67,20 @@ def _colors(G):
     return colors
 
 
-def plot_molcloud(examples, background_color=_background_color, node_size=10, quiet=False):
+def plot_graphs(G, node_colors, edge_colors, background_color, node_size):
+    fig = plt.gcf()
+    ratio = fig.get_figheight() / fig.get_figwidth()
+    pos = custom_layout(G, prog="neato", ratio=ratio,
+                        args="-Gmaxiter=5000 -Gepsilon=0.00001")
+    nx.draw(G, pos, node_size=node_size,
+            node_color=node_colors, edge_color=edge_colors)
+    ax = plt.gca()
+    ax.set_facecolor(background_color)
+    ax.axis("off")
+    fig.set_facecolor(background_color)
+
+
+def plot_molcloud(examples, background_color=background_color, node_size=10, quiet=False):
     G = None
     for smi in tqdm.tqdm(examples, disable=quiet):
         g = _smiles2graph(smi)
@@ -78,12 +91,4 @@ def plot_molcloud(examples, background_color=_background_color, node_size=10, qu
         else:
             G = nx.disjoint_union(g, G)
     c = _colors(G)
-    fig = plt.gcf()
-    ratio = fig.get_figheight() / fig.get_figwidth()
-    pos = _custom_layout(G, prog="neato", ratio=ratio,
-                         args="-Gmaxiter=5000 -Gepsilon=0.00001")
-    nx.draw(G, pos, node_size=node_size, node_color=c)
-    ax = plt.gca()
-    ax.set_facecolor(background_color)
-    ax.axis("off")
-    fig.set_facecolor(background_color)
+    plot_graphs(G, c, '#333', background_color, node_size)
