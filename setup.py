@@ -17,7 +17,7 @@ setup(
     license="MIT",
     packages=["molcloud"],
     install_requires=["networkx", "matplotlib",
-                      "pygraphviz", "rdkit", "click", "tqdm"],
+                      "pygraphviz", "rdkit", "click", "tqdm","opencv-python"],
     test_suite="tests",
         entry_points="""
         [console_scripts]
