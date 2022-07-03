@@ -14,10 +14,11 @@ import click
 
 def main(fasta_file, output_file, width, background_color, node_size, quiet):
     fasta_texts = []
+    fasta_text  = ""
     with open(fasta_file) as f:
         for line in f.readlines():
             if line.startswith(">"):
-                fasta_texts.append(fasta_text)
+                if fasta_text !="": fasta_texts.append(fasta_text)
                 fasta_text = ""
             else:
                 fasta_text += line
