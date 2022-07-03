@@ -86,7 +86,7 @@ def plot_rnacloud(fasta_texts, background_color=background_color, node_size=10, 
     G = None
 
     for fasta_text in tqdm.tqdm(fasta_texts, disable=quiet):
-        g, bg = _fasta_text2graph(fasta_text)
+        g = _fasta_text2graph(fasta_text)
         if g is None:
             continue
         if G is None:
