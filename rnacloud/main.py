@@ -1,5 +1,5 @@
 from importlib.resources import path
-from .lib import plot_molcloud
+from .lib import plot_rnacloud
 import matplotlib.pyplot as plt
 import click
 
@@ -23,6 +23,6 @@ def main(fasta_file, output_file, width, background_color, node_size, quiet):
             else:
                 fasta_text += line
     plt.figure(figsize=(width, width))
-    plot_molcloud(fasta_texts, background_color=background_color,
+    plot_rnacloud(fasta_texts, background_color=background_color,
                   node_size=node_size, quiet=quiet)
     plt.savefig(output_file)
