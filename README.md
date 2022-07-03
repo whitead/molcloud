@@ -12,12 +12,16 @@ pip install molcloud
 
 ```sh
 molcloud [smiles-file]
+rnacloud [fasta-file]
+
 ```
 
 and the output will go to `cloud.png`. You can specify a few things too:
 
 ```sh
 molcloud [smiles-file] --output-file [output-file] --width 10 --node-size 25
+rnacloud [fasta-file] --output-file [output-file] --width 10 --node-size 25
+
 ```
 
 Use `molcloud --help` for complete options. `smiles-file` should contain smiles, one per line like:
@@ -25,6 +29,12 @@ Use `molcloud --help` for complete options. `smiles-file` should contain smiles,
 ```plain
 O=C(OC)C=1C=CC2=NC=C(C(=O)OCC)C(NCC(O)C)=C2C1
 O=C1C2=NC=CC3=C(OC)C=4OCOC4C(C=5C=C(OC)C(OC)=C(OC)C15)=C23
+```
+`fasta-file` should contain sequence and bracket notations, three lines per 1 sequence like:
+```
+>seq_0
+UUCCAGCACCUGAUGUUCGAAUUUAAAUCGGCUCAACGAG
+(((.((((.....)))).)))......(((......))).
 ```
 
 Adjust width as you add more molecules. The drawing is always square (sorry).
