@@ -16,11 +16,10 @@ _bond_colors = {
     "hydrogen": "#999999"
     }
 
-_unknown_color    = "#AAAAAA"
+_unknown_color = "#AAAAAA"
 _background_color = "#f5f4e9"
-_basepair_color   = "#cccccc"
 
-def _fasta_text2graph(fasta_text, basepair_color):
+def _fasta_text2graph(fasta_text):
     bg = fgb.BulgeGraph.from_fasta_text(fasta_text)[0]
     G = nx.Graph()
     residues = []
@@ -83,11 +82,11 @@ def _custom_layout(G, prog, ratio, args=''):
     return node_pos
 
 
-def plot_rnacloud(fasta_texts, background_color=background_color, basepair_color = basepair_color, node_size=10, quiet=False):
+def plot_rnacloud(fasta_texts, background_color=background_color, node_size=10, quiet=False):
     G = None
 
     for fasta_text in tqdm.tqdm(fasta_texts, disable=quiet):
-        g, bg = _fasta_text2graph(fasta_text, basepair_color = basepair_color)
+        g, bg = _fasta_text2graph(fasta_text)
         if g is None:
             continue
         if G is None:

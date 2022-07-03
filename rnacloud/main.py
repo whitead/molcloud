@@ -13,7 +13,7 @@ import click
 @click.option("--quiet", is_flag=True, default=False, help="Don't show progress")
 
 def main(fasta_file, output_file, width, background_color, node_size, quiet):
-    fasta_texts = []
+    fasta_texts = []sssssss
     fasta_text  = ""
     with open(fasta_file) as f:
         for line in f.readlines():
