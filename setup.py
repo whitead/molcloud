@@ -19,7 +19,7 @@ setup(
     packages=["molcloud"],
     install_requires=["networkx", "matplotlib",
                       "pygraphviz", "rdkit", "click", "tqdm"],
-    extras_require={"rna": ["numpy", "forgi=2.0.2"]},
+    extras_require={"rna": ["numpy", "forgi==2.0.2"]},
     test_suite="tests",
         entry_points="""
         [console_scripts]
