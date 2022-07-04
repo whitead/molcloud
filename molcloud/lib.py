@@ -28,6 +28,23 @@ def darkmode():
     _atom_colors[6] = '#ef9af2'
 
 
+def _make_mask(image_path):
+    '''This function loads an image and returns a callable mask function'''
+    im = plt.imread(image_path)
+    # swap axes to match x,y and move origin to bottom
+    im = np.swapaxes(im, 0, 1)
+    im = im[:, ::-1]
+    # make mask by threshold
+    mask = im[:, :, 0] > 0.5
+    # now convert to callable function
+
+    def mask_func(u, v):
+        i = min(int(u * mask.shape[0]), mask.shape[0] - 1)
+        j = min(int(v * mask.shape[1]), mask.shape[1] - 1)
+        return mask[i, j]
+    return mask_func
+
+
 def _smooth(data, window_size):
     # smooth with moving average
     # assumes time is 0th axis
@@ -41,7 +58,37 @@ def _smooth(data, window_size):
     return s.reshape(-1, *data.shape[1:])
 
 
-def custom_layout(G, prog, args='', start_pos=None):
+def _does_not_work_nx_custom_layout(G, prog, args='', start_pos=None, mask_func=None):
+    pos = custom_layout(G, prog, args, start_pos)
+    # rescale back to 0-1
+    pos = nx.rescale_layout_dict(pos, scale=1)
+    if mask_func is not None:
+        mask_graph = nx.Graph()
+        index = 0
+        npoints = 100
+        start_pos = {}
+        xmin, ymin, xmax, ymax = 0, 0, 1, 1
+        # make grid of points in rect
+        xs = np.linspace(xmin, xmax, npoints)
+        ys = np.linspace(ymin, ymax, npoints)
+        # now add nodes at those positions
+        for i in range(npoints):
+            for j in range(npoints):
+                if mask_func(
+                    (xs[i] - xmin) / (xmax - xmin),
+                        (ys[j] - ymin) / (ymax - ymin)):
+                    mask_graph.add_node(f'extra-{index}')
+                    start_pos[f'extra-{index}'] = (xs[i], ys[j])
+                    index += 1
+        # combine start_pos and pos
+        pos = {**start_pos, **pos}
+        combined = nx.disjoint_union(G, mask_graph)
+        return nx.spring_layout(combined, iterations=200, pos=pos, fixed=mask_graph.nodes())
+    else:
+        return pos
+
+
+def custom_layout(G, prog, args='', start_pos=None, mask_func=None):
     A = nx.nx_agraph.to_agraph(G)
     inputscale = 72  # const in graphviz
     # set start position
@@ -51,11 +98,42 @@ def custom_layout(G, prog, args='', start_pos=None):
             if n in start_pos:
                 node.attr["pos"] = f'{start_pos[n][0]:.2f},{start_pos[n][1]:.2f}'
                 node.attr["pin"] = True
+
     A.graph_attr["notranslate"] = True
+    #A.graph_attr["normalize"] = False
+    #A.graph_attr["epsilon"] = 0.0001
     A.graph_attr["inputscale"] = inputscale
-    A.write('start' + ".dot")
     A.layout(prog=prog, args=args)
-    A.write('end' + ".dot")
+    A.write("tmp0.dot")
+    index = len(G)
+    if mask_func is not None:
+        #A.graph_attr["overlap"] = "prism10000"
+        npoints = 100
+        rect = A.graph_attr["bb"]
+        xmin, ymin, xmax, ymax = [float(x) for x in rect.split(",")]
+        print(xmin, ymin, xmax, ymax)
+        delta = (xmax - xmin) / npoints
+        #xmin, ymin, xmax, ymax = -1000, -1000, 1000, 1000
+        # make grid of points in rect
+        xs = np.linspace(xmin, xmax, npoints)
+        ys = np.linspace(ymin, ymax, npoints)
+        # now add nodes at those positions
+        for i in range(npoints):
+            for j in range(npoints):
+                if not mask_func(
+                    (xs[i] - xmin) / (xmax - xmin),
+                        (ys[j] - ymin) / (ymax - ymin)):
+                    A.add_node(f"extra-{index}",
+                               pos=f"{xs[i]},{ys[j]}", pin=True)
+                    index += 1
+        del A.graph_attr["bb"]
+        # now clear existing positions
+        for n in G:
+            node = pygraphviz.Node(A, n)
+            del node.attr["pos"]
+        A.write("tmp.dot")
+        A.layout(prog=prog, args=args)
+        A.write("tmp2.dot")
     node_pos = {}
     for n in G:
         node = pygraphviz.Node(A, n)
@@ -131,21 +209,31 @@ def _colors(G):
     return colors
 
 
-def plot_graphs(G, node_colors, edge_colors, background_color, node_size):
+def plot_graphs(G, node_colors, edge_colors, background_color, node_size, mask_path=None):
     fig = plt.gcf()
     # get fig width
     #size = fig.get_figwidth(), fig.get_figheight()
-    pos = custom_layout(G, prog="neato",
+    mask_func = None
+    if mask_path is not None:
+        mask_func = _make_mask(mask_path)
+    pos = custom_layout(G, prog="neato", mask_func=mask_func,
                         args="-Gmaxiter=5000 -Gepsilon=0.00001")
+    pos = nx.rescale_layout_dict(pos, scale=1)
     nx.draw(G, pos, node_size=node_size,
             node_color=node_colors, edge_color=edge_colors)
+    if mask_path:
+        im = plt.imread(mask_path)
+        mask = im[:, :, 0] > 0.5
+        # add alpha channel with mask
+        im[:, :, 3] = mask
+        plt.imshow(im, extent=[-1, 1, -1, 1], zorder=0)
     ax = plt.gca()
     ax.set_facecolor(background_color)
     ax.axis("off")
     fig.set_facecolor(background_color)
 
 
-def plot_molcloud(examples, background_color=background_color, node_size=10, quiet=False):
+def plot_molcloud(examples, background_color=background_color, node_size=10, quiet=False, mask_path=None):
     G = None
     for smi in tqdm.tqdm(examples, disable=quiet):
         g = _smiles2graph(smi)
@@ -156,7 +244,7 @@ def plot_molcloud(examples, background_color=background_color, node_size=10, qui
         else:
             G = nx.disjoint_union(g, G)
     c = _colors(G)
-    plot_graphs(G, c, '#333', background_color, node_size)
+    plot_graphs(G, c, '#333', background_color, node_size, mask_path=mask_path)
 
 
 def animate_molcloud(examples, prog="neato", background_color=background_color, node_size=10, quiet=False, duration=3, fps=20):

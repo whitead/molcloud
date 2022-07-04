@@ -5,7 +5,16 @@ import networkx as nx
 import numpy as np
 
 
-def test_custom_layout():
+def test_mask():
+    with open("tests/test.smi", "r") as f:
+        smls = f.read().splitlines()
+    plt.figure(figsize=(20, 20))
+    molcloud.plot_molcloud(smls[:200], mask_path='tests/text.png')
+    plt.savefig("text.png")
+    plt.close()
+
+
+def dtest_custom_layout():
     # make random graph
     G = nx.gnp_random_graph(100, 0.5)
     pos = molcloud.lib.custom_layout(G, 'neato')
@@ -15,15 +24,15 @@ def test_custom_layout():
         np.testing.assert_allclose(new_pos[n], pos[n], atol=0.1)
 
 
-def test_animate_molcloud():
+def dtest_animate_molcloud():
     with open("tests/test.smi", "r") as f:
         smls = f.read().splitlines()
     plt.figure(figsize=(7, 7))
     molcloud.darkmode()
-    molcloud.animate_molcloud(smls[:15], prog='sfdp', background_color='#333')
+    molcloud.animate_molcloud(smls[:15], prog='neato', background_color='#333')
 
 
-def test_plot_molcloud():
+def dtest_plot_molcloud():
     with open("tests/test.smi", "r") as f:
         smls = f.read().splitlines()
     plt.figure(figsize=(20, 20))
@@ -32,7 +41,7 @@ def test_plot_molcloud():
     plt.close()
 
 
-def test_plot_rnacloud():
+def dtest_plot_rnacloud():
     fasta_texts = []
     fasta_text = ""
     with open('tests/test.fa') as f:
