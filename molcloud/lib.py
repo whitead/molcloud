@@ -43,9 +43,9 @@ def _custom_layout(G, prog, ratio, args=''):
     return node_pos
 
 
-def _smiles2graph(sml, aim=False):
+def _smiles2graph(sml, aim=False, molid=0, offset=0):
 
-	# Track atoms in molecule
+    # Track atoms in molecule
     df = []
     m = Chem.MolFromSmiles(sml)
     if m is None:
@@ -55,15 +55,15 @@ def _smiles2graph(sml, aim=False):
     for i,a in enumerate(m.GetAtoms()):
         idx=a.GetIdx()
         G.add_node(idx, element=a.GetAtomicNum())
-        if aim:    df.append([0,idx,1])
+        if aim:    df.append([molid,idx+offset,1])
     for j in m.GetBonds():
         u = j.GetBeginAtomIdx()
         v = j.GetEndAtomIdx()
         G.add_edge(u, v)
 
     if aim:
-	    df = pd.DataFrame(df, columns=["molid","atom","isin"])
-	    return G,df
+        df = pd.DataFrame(df, columns=["molid","atom","isin"])
+        return G,df
     return G
 
 
@@ -106,7 +106,7 @@ def _loadTemplate(template):
     _, temp, mask, _ = cv2.floodFill(temp, mask, (x, y), 1)
     return temp
 
-def _dropMols(G, pos, c, temp):
+def _dropMols(G, pos, c, temp, moldf):
 
     # Get pos in same scale as template
     posdf = pd.DataFrame(pos)
@@ -115,19 +115,31 @@ def _dropMols(G, pos, c, temp):
     posdf.iloc[0] *= temp.shape[1] - 1
     posdf = posdf.astype(int).to_dict('list')
 
-
-    # Removing atoms (nodes)
-    Gold = G.copy()
-    new_c = []
-    for atom in Gold:
+    # First: label atoms as in or out boundary
+    for i,atom in enumerate(G):
         coords = posdf[atom]
-        #print(coords, template[coords])
         if temp[temp.shape[0]-coords[1]-1, coords[0]] == 0:
+            moldf.loc[i, "isin"] = 0
+
+    # Decide what molecules to drop
+    gb = moldf.groupby("molid").apply(lambda x: x.sum()/x.count())
+    gb = (gb["isin"]>0.7).drop(columns="atom")
+
+    moldf = pd.merge(moldf.drop(columns="isin"), gb, left_on="molid", right_index=True)
+
+    new_c = []
+    print(moldf.head(50))
+    for at in G:
+        print(at)
+
+    for i in moldf.index:
+        isin, atom = moldf.loc[i, ["isin","atom"]]
+        if not isin:
             G.remove_node(atom)
             pos.pop(atom)
         else:
             new_c.append(c[atom])
-
+            
     return G, pos, new_c
 
 
@@ -150,8 +162,7 @@ def plot_molcloud(examples, background_color=_background_color, node_size=10, qu
 
     for i, smi in enumerate(tqdm.tqdm(examples, disable=quiet)):
         if template:
-            g, df_ = _smiles2graph(smi, aim=True)
-            df_["molid"] = i
+            g, df_ = _smiles2graph(smi, aim=True, molid=i, offset=moldf.shape[0])
             moldf = pd.concat([moldf, df_])
         else:
             g = _smiles2graph(smi)
@@ -161,9 +172,10 @@ def plot_molcloud(examples, background_color=_background_color, node_size=10, qu
         if G is None:
             G = g
         else:
-            G = nx.disjoint_union(g, G)
+            G = nx.disjoint_union(G, g)
 
-    print(moldf)
+
+    moldf = moldf.reset_index(drop=True)
     fig = plt.gcf()
 
    
@@ -179,7 +191,7 @@ def plot_molcloud(examples, background_color=_background_color, node_size=10, qu
 
     if template:
         ### Remove molecules outside the white region
-        G, pos, c = _dropMols(G, pos, c, temp)
+        G, pos, c = _dropMols(G, pos, c, temp, moldf)
         
 
 
