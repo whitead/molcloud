@@ -106,7 +106,7 @@ def _loadTemplate(template):
     _, temp, mask, _ = cv2.floodFill(temp, mask, (x, y), 1)
     return temp
 
-def _dropMols(G, pos, c, temp, moldf):
+def _dropMols(G, pos, c, temp, moldf, thresh):
 
     # Get pos in same scale as template
     posdf = pd.DataFrame(pos)
@@ -123,15 +123,11 @@ def _dropMols(G, pos, c, temp, moldf):
 
     # Decide what molecules to drop
     gb = moldf.groupby("molid").apply(lambda x: x.sum()/x.count())
-    gb = (gb["isin"]>0.7).drop(columns="atom")
+    gb = (gb["isin"]>thresh).drop(columns="atom")
 
     moldf = pd.merge(moldf.drop(columns="isin"), gb, left_on="molid", right_index=True)
 
     new_c = []
-    print(moldf.head(50))
-    for at in G:
-        print(at)
-
     for i in moldf.index:
         isin, atom = moldf.loc[i, ["isin","atom"]]
         if not isin:
@@ -144,7 +140,7 @@ def _dropMols(G, pos, c, temp, moldf):
 
 
 def plot_molcloud(examples, background_color=_background_color, node_size=10, quiet=False,
-                  template=None, repeat=0):
+                  template=None, repeat=0, thresh=0.5):
 
 
     # repeat dataset N times, so image is more filled.
@@ -190,10 +186,8 @@ def plot_molcloud(examples, background_color=_background_color, node_size=10, qu
                          args="-Gmaxiter=5000 -Gepsilon=0.00001")
 
     if template:
-        ### Remove molecules outside the white region
-        G, pos, c = _dropMols(G, pos, c, temp, moldf)
-        
-
+        ### Remove molecules outside the masked region (upon threshold)
+        G, pos, c = _dropMols(G, pos, c, temp, moldf, thresh)
 
     nx.draw(G, pos, node_size=node_size, node_color=c)
     ax = plt.gca()
