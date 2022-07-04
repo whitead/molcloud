@@ -1,4 +1,3 @@
-from curses import window
 from .version import __version__
 from rdkit.rdBase import BlockLogs
 import networkx as nx
