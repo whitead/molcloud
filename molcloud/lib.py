@@ -222,7 +222,7 @@ def plot_graphs(G, node_colors, edge_colors, background_color, node_size, temp=N
     fig.set_facecolor(background_color)
 
 
-def plot_molcloud(examples, background_color=_background_color, node_size=10, quiet=False,
+def plot_molcloud(examples, background_color=background_color, node_size=10, quiet=False,
                   template=None, repeat=0, thresh=0.5):
 
 
