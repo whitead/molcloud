@@ -254,6 +254,7 @@ def plot_molcloud(examples, background_color=background_color, node_size=10, qui
         mask = _make_mask(template)
         ratio = mask.shape[0] / mask.shape[1]
     else:
+        mask = None
         ratio = fig.get_figheight() / fig.get_figwidth()
 
     c = _colors(G)
