@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from rdkit import Chem
 import tqdm
-import cv2
 import pandas as pd
 
 BlockLogs()
@@ -77,48 +76,64 @@ def _colors(G):
         colors.append(c)
     return colors
 
-def _loadTemplate(template):
 
-    ########    Do some image processing on template image.
-    img = cv2.imread(template,0)
-    # Canny edge detection
-    img = cv2.Canny(img,100,200)
-    ctrs = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
 
-    # Get largest contour
-    max_c=[]
-    for c in ctrs[0]:
-        if len(c)>len(max_c):
-            max_c=c
+#def _loadTemplate(template):
+#
+#    ########    Do some image processing on template image.
+#    img = cv2.imread(template,0)
+#    # Canny edge detection
+#    img = cv2.Canny(img,100,200)
+#    ctrs = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+#
+#    # Get largest contour
+#    max_c=[]
+#    for c in ctrs[0]:
+#        if len(c)>len(max_c):
+#            max_c=c
+#
+#    M = cv2.moments(max_c)
+#    x = int(M["m10"] / M["m00"])
+#    y = int(M["m01"] / M["m00"])
+#
+#    # Initiale mask for flood filling
+#    width, height = img.shape
+#    mask = img2 = np.ones((width + 2, height + 2), np.uint8) * 255
+#    mask[1:width, 1:height] = 0
+#
+#    # Generate intermediate image, draw largest contour, flood filled
+#    temp = np.zeros(img.shape, np.uint8)
+#    temp = cv2.drawContours(temp, max_c, -1, 1, cv2.FILLED)
+#    _, temp, mask, _ = cv2.floodFill(temp, mask, (x, y), 1)
+#    return temp
 
-    M = cv2.moments(max_c)
-    x = int(M["m10"] / M["m00"])
-    y = int(M["m01"] / M["m00"])
 
-    # Initiale mask for flood filling
-    width, height = img.shape
-    mask = img2 = np.ones((width + 2, height + 2), np.uint8) * 255
-    mask[1:width, 1:height] = 0
+def _make_mask(image_path):
+    '''This function loads an image and returns a callable mask function'''
+    im = plt.imread(image_path)
 
-    # Generate intermediate image, draw largest contour, flood filled
-    temp = np.zeros(img.shape, np.uint8)
-    temp = cv2.drawContours(temp, max_c, -1, 1, cv2.FILLED)
-    _, temp, mask, _ = cv2.floodFill(temp, mask, (x, y), 1)
-    return temp
+    def rgb2gray(rgb):
+        return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
 
-def _dropMols(G, pos, c, temp, moldf, thresh):
+    # Convert to grayscale and apply threshold
+    mask = rgb2gray(im) < 255//2
+    return mask
+
+
+def _dropMols(G, pos, c, mask, moldf, thresh):
 
     # Get pos in same scale as template
     posdf = pd.DataFrame(pos)
     posdf = posdf.divide(posdf.max(axis=1),axis=0)
-    posdf.iloc[1] *= temp.shape[0] - 1
-    posdf.iloc[0] *= temp.shape[1] - 1
+
+    posdf.iloc[1] *= mask.shape[0] - 1
+    posdf.iloc[0] *= mask.shape[1] - 1
     posdf = posdf.astype(int).to_dict('list')
 
     # First: label atoms as in or out boundary
     for i,atom in enumerate(G):
         coords = posdf[atom]
-        if temp[temp.shape[0]-coords[1]-1, coords[0]] == 0:
+        if mask[mask.shape[0]-coords[1]-1, coords[0]] == 0:
             moldf.loc[i, "isin"] = 0
 
     # Decide what molecules to drop
@@ -176,8 +191,8 @@ def plot_molcloud(examples, background_color=_background_color, node_size=10, qu
 
    
     if template:    # Get a binary classified map
-        temp = _loadTemplate(template)
-        ratio = temp.shape[0] / temp.shape[1]
+        mask = _make_mask(template)
+        ratio = mask.shape[0] / mask.shape[1]
     else:
         ratio = fig.get_figheight() / fig.get_figwidth()
 
@@ -187,7 +202,7 @@ def plot_molcloud(examples, background_color=_background_color, node_size=10, qu
 
     if template:
         ### Remove molecules outside the masked region (upon threshold)
-        G, pos, c = _dropMols(G, pos, c, temp, moldf, thresh)
+        G, pos, c = _dropMols(G, pos, c, mask, moldf, thresh)
 
     nx.draw(G, pos, node_size=node_size, node_color=c)
     ax = plt.gca()
