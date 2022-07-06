@@ -42,7 +42,7 @@ def _smooth(data, window_size):
     return s.reshape(-1, *data.shape[1:])
 
 
-def _custom_layout(G, prog, ratio=1, args='', start_pos=None):
+def custom_layout(G, prog, ratio=1, args='', start_pos=None):
     A = nx.nx_agraph.to_agraph(G)
     A.graph_attr.update(ratio=ratio)
 
@@ -198,7 +198,7 @@ def _dropMols(G, pos, c, mask, moldf, thresh):
 
 def plot_graphs(G, node_colors, edge_colors, background_color, node_size, mask=None, moldf=None, thresh=0.7, ratio=1):
     fig = plt.gcf()
-    pos = _custom_layout(G, prog="neato",
+    pos = custom_layout(G, prog="neato",
                         args="-Gmaxiter=5000 -Gepsilon=0.00001", ratio=ratio)
 
     if mask is not None:
