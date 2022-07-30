@@ -23,6 +23,11 @@ and the output will go to `cloud.png`. You can specify a few things too:
 molcloud [smiles-file] --output-file [output-file] --width 10 --node-size 25
 ```
 
+To embed the resulting image in some custom shape, use the flag --template
+```sh
+molcloud [smiles-file] --output-file [output-file] --template [template-file]
+```
+
 Use `molcloud --help` for complete options. `smiles-file` should contain smiles, one per line like:
 
 ```plain
@@ -56,6 +61,9 @@ UUCCAGCACCUGAUGUUCGAAUUUAAAUCGGCUCAACGAG
 ## Molecule Example
 
 ![test](https://user-images.githubusercontent.com/908389/176980703-bc814295-ee37-4c41-a31b-6b75bb420659.png)
+
+## Example with template
+![test_templ](images/beak0.5.png)
 
 ## RNA Example
 

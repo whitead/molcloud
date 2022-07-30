@@ -11,12 +11,16 @@ import click
 @click.option("--background-color", default="#f5f4e9", help="Background color of the output image")
 @click.option("--node-size", type=int, default=10, help="Size of the nodes")
 @click.option("--quiet", is_flag=True, default=False, help="Don't show progress")
-def smiles(smiles_file, output_file, width, background_color, node_size, quiet):
+@click.option("--template", default=None, type=click.Path(exists=False), help="Template image with some simple shape.")
+@click.option("--repeat", default=0, type=int, help="Place molecules multiple times to fill more space.")
+@click.option("--thresh", default=0.7, type=float, help="Threshold for keeping molecule at boundary.")
+def smiles(smiles_file, output_file, width, background_color, node_size, quiet, template, repeat, thresh):
     with open(smiles_file, "r") as f:
         smls = f.read().splitlines()
     plt.figure(figsize=(width, width))
     plot_molcloud(smls, background_color=background_color,
-                  node_size=node_size, quiet=quiet)
+                  node_size=node_size, quiet=quiet,
+                  template=template, repeat=repeat, thresh=thresh)
     plt.savefig(output_file)
 
 
