@@ -5,7 +5,7 @@ import networkx as nx
 import numpy as np
 
 
-def dtest_custom_layout():
+def test_custom_layout():
     # make random graph
     G = nx.gnp_random_graph(100, 0.5)
     pos = molcloud.lib.custom_layout(G, 'neato')
@@ -16,7 +16,7 @@ def dtest_custom_layout():
     #    np.testing.assert_allclose(new_pos[n], pos[n], atol=0.1)
 
 
-def dtest_animate_molcloud():
+def test_animate_molcloud():
     with open("tests/test.smi", "r") as f:
         smls = f.read().splitlines()
     plt.figure(figsize=(7, 7))

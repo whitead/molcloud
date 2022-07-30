@@ -59,11 +59,13 @@ UUCCAGCACCUGAUGUUCGAAUUUAAAUCGGCUCAACGAG
 ```
 
 ## Molecule Example
-
 ![test](https://user-images.githubusercontent.com/908389/176980703-bc814295-ee37-4c41-a31b-6b75bb420659.png)
 
 ## Example with template
-![test_templ](images/beak0.5.png)
+
+```sh
+molcloud tests/test.smi --template tests/shapes/beaker.png --width 15
+```
 
 ## RNA Example
 
