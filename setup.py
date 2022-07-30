@@ -17,7 +17,7 @@ setup(
     url="https://github.com/whitead/molcloud",
     license="MIT",
     packages=["molcloud"],
-    install_requires=["networkx", "matplotlib",
+    install_requires=["networkx", "matplotlib", "pandas",
                       "pygraphviz", "rdkit", "click", "tqdm"],
     extras_require={"rna": ["numpy", "forgi==2.0.2"],
                     "all": ["numpy", "forgi==2.0.2", "moviepy"]},

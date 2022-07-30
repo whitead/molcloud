@@ -44,7 +44,8 @@ def _smooth(data, window_size):
 
 def custom_layout(G, prog, ratio=1, args='', start_pos=None):
     A = nx.nx_agraph.to_agraph(G)
-    A.graph_attr.update(ratio=ratio)
+    # just stretches the graph, so no point
+    # A.graph_attr.update(ratio=ratio)
 
     inputscale = 72  # const in graphviz
     # set start position
@@ -118,18 +119,19 @@ def _smiles2graph(sml, aim=False, molid=0, offset=0):
         return None
     # m = rdkit.Chem.AddHs(m)
     G = nx.Graph()
-    for i,a in enumerate(m.GetAtoms()):
-        idx=a.GetIdx()
+    for i, a in enumerate(m.GetAtoms()):
+        idx = a.GetIdx()
         G.add_node(idx, element=a.GetAtomicNum())
-        if aim:    df.append([molid,idx+offset,1])
+        if aim:
+            df.append([molid, idx+offset, 1])
     for j in m.GetBonds():
         u = j.GetBeginAtomIdx()
         v = j.GetEndAtomIdx()
         G.add_edge(u, v)
 
     if aim:
-        df = pd.DataFrame(df, columns=["molid","atom","isin"])
-        return G,df
+        df = pd.DataFrame(df, columns=["molid", "atom", "isin"])
+        return G, df
     return G
 
 
@@ -144,55 +146,54 @@ def _colors(G):
     return colors
 
 
-
 def _make_mask(image_path):
     '''This function loads an image and returns a callable mask function'''
     mask = plt.imread(image_path)
     mask = mask*255./mask.max()
 
     def rgb2gray(rgb):
-        return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
+        return np.dot(rgb[..., :3], [0.2989, 0.5870, 0.1140])
 
     # Convert to grayscale and apply threshold
-    if len(mask.shape)>2:
+    if len(mask.shape) > 2:
         mask = rgb2gray(mask)
 
     return mask < 255//2
 
 
-def _dropMols(G, pos, c, mask, moldf, thresh):
+def _drop_mols(G, pos, c, mask, moldf, thresh):
 
     # Get pos in same scale as template
     posdf = pd.DataFrame(pos)
     posdf = (posdf.T - posdf.min(axis=1)).T
-    posdf = posdf.divide(posdf.max(axis=1),axis=0)
-    
-    
+    posdf = posdf.divide(posdf.max(axis=1), axis=0)
+
     posdf.iloc[1] *= mask.shape[0] - 1
     posdf.iloc[0] *= mask.shape[1] - 1
     posdf = posdf.astype(int).to_dict('list')
 
     # First: label atoms as in or out boundary
-    for i,atom in enumerate(G):
+    for i, atom in enumerate(G):
         coords = posdf[atom]
         if mask[mask.shape[0]-coords[1]-1, coords[0]] == 0:
             moldf.loc[i, "isin"] = 0
 
     # Decide what molecules to drop
     gb = moldf.groupby("molid").apply(lambda x: x.sum()/x.count())
-    gb = (gb["isin"]>thresh).drop(columns="atom")
+    gb = (gb["isin"] > thresh).drop(columns="atom")
 
-    moldf = pd.merge(moldf.drop(columns="isin"), gb, left_on="molid", right_index=True)
+    moldf = pd.merge(moldf.drop(columns="isin"), gb,
+                     left_on="molid", right_index=True)
 
     new_c = []
     for i in moldf.index:
-        isin, atom = moldf.loc[i, ["isin","atom"]]
+        isin, atom = moldf.loc[i, ["isin", "atom"]]
         if not isin:
             G.remove_node(atom)
             pos.pop(atom)
         else:
             new_c.append(c[atom])
-            
+
     return G, pos, new_c
 
 
@@ -202,8 +203,9 @@ def plot_graphs(G, node_colors, edge_colors, background_color, node_size, mask=N
                         args="-Gmaxiter=5000 -Gepsilon=0.00001", ratio=ratio)
 
     if mask is not None:
-        ### Remove molecules outside the masked region (upon threshold)
-        G, pos, node_colors = _dropMols(G, pos, node_colors, mask, moldf, thresh)
+        # Remove molecules outside the masked region (upon threshold)
+        G, pos, node_colors = _drop_mols(
+            G, pos, node_colors, mask, moldf, thresh)
 
     nx.draw(G, pos, node_size=node_size,
             node_color=node_colors, edge_color=edge_colors)
@@ -213,11 +215,8 @@ def plot_graphs(G, node_colors, edge_colors, background_color, node_size, mask=N
     fig.set_facecolor(background_color)
 
 
-
-
 def plot_molcloud(examples, background_color=background_color, node_size=10, quiet=False,
                   template=None, repeat=0, thresh=0.5):
-
 
     # repeat dataset N times, so image is more filled.
     # But reshuffle so locations are not so close
@@ -229,11 +228,12 @@ def plot_molcloud(examples, background_color=background_color, node_size=10, qui
     G = None
 
     # Store for each atom in each molecule: is in or out the region.
-    moldf = pd.DataFrame(columns=["molid","atom","isin"])
+    moldf = pd.DataFrame(columns=["molid", "atom", "isin"])
 
     for i, smi in enumerate(tqdm.tqdm(examples, disable=quiet)):
         if template:
-            g, df_ = _smiles2graph(smi, aim=True, molid=i, offset=moldf.shape[0])
+            g, df_ = _smiles2graph(
+                smi, aim=True, molid=i, offset=moldf.shape[0])
             moldf = pd.concat([moldf, df_])
         else:
             g = _smiles2graph(smi)
@@ -245,11 +245,9 @@ def plot_molcloud(examples, background_color=background_color, node_size=10, qui
         else:
             G = nx.disjoint_union(G, g)
 
-
     moldf = moldf.reset_index(drop=True)
     fig = plt.gcf()
 
-   
     if template:    # Get a binary classified map
         mask = _make_mask(template)
         ratio = mask.shape[0] / mask.shape[1]
@@ -258,8 +256,8 @@ def plot_molcloud(examples, background_color=background_color, node_size=10, qui
         ratio = fig.get_figheight() / fig.get_figwidth()
 
     c = _colors(G)
-    plot_graphs(G, c, '#333', background_color, node_size, mask, moldf, thresh, ratio)
-
+    plot_graphs(G, c, '#333', background_color,
+                node_size, mask, moldf, thresh, ratio)
 
 
 def animate_molcloud(examples, prog="neato", background_color=background_color, node_size=10, quiet=False, duration=3, fps=20):
