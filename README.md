@@ -23,7 +23,7 @@ and the output will go to `cloud.png`. You can specify a few things too:
 molcloud [smiles-file] --output-file [output-file] --width 10 --node-size 25
 ```
 
-To embed the resulting image in some custom shape, use the flag --template
+To cut the resulting image in some custom shape, use the flag --template (thanks to [@doncamilom](https://github.com/doncamilom))!
 ```sh
 molcloud [smiles-file] --output-file [output-file] --template [template-file]
 ```
@@ -66,10 +66,8 @@ UUCCAGCACCUGAUGUUCGAAUUUAAAUCGGCUCAACGAG
 ```sh
 molcloud tests/test.smi --template tests/shapes/beaker.png --width 15
 ```
+![cloud](https://user-images.githubusercontent.com/908389/181866813-0d060628-0615-430d-b581-56c09c3bf914.png)
 
 ## RNA Example
 
 ![rna](https://user-images.githubusercontent.com/908389/177061306-8caea628-12a4-4ccd-ae7d-ae240ba3adb1.png)
-
-
-## Animation Example
