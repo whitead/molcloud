@@ -20,7 +20,7 @@ setup(
     install_requires=["networkx", "matplotlib", "pandas",
                       "pygraphviz", "rdkit", "click", "tqdm"],
     extras_require={"rna": ["numpy", "forgi==2.0.2"],
-                    "all": ["numpy", "forgi==2.0.2", "moviepy"]},
+                    "all": ["numpy", "forgi==2.0.2", "moviepy<2.0.0"]},
     test_suite="tests",
     entry_points="""
         [console_scripts]
