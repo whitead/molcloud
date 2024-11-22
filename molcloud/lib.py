@@ -260,9 +260,18 @@ def plot_molcloud(examples, background_color=background_color, node_size=10, qui
                 node_size, mask, moldf, thresh, ratio)
 
 
-def animate_molcloud(examples, prog="neato", background_color=background_color, node_size=10, quiet=False, duration=3, fps=20):
-    from moviepy.editor import VideoClip
-    from moviepy.video.io.bindings import mplfig_to_npimage
+def animate_molcloud(examples, prog="neato", background_color="#000000", node_size=10, quiet=False, duration=3, fps=20):
+    from moviepy import VideoClip
+    import tqdm
+    import io
+
+    def fig_to_npimage(fig, dpi_scale=1, transparent=False):
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', transparent=transparent, dpi=fig.dpi * dpi_scale)
+        buf.seek(0)
+        img = plt.imread(buf)
+        buf.close()
+        return img
 
     all_G = []
     all_c = []
@@ -270,6 +279,8 @@ def animate_molcloud(examples, prog="neato", background_color=background_color, 
     pos = None
     i_steps = 30
     N = 0
+
+    # Process each SMILES string to build graphs and positions
     for smi in tqdm.tqdm(examples, disable=quiet):
         g = _smiles2graph(smi)
         if g is None:
@@ -284,33 +295,45 @@ def animate_molcloud(examples, prog="neato", background_color=background_color, 
         all_G.append(G)
         all_c.append(_colors(G))
         N += i_steps
-    fig = plt.gcf()
 
-    nodes = nx.draw_networkx_nodes(
-        all_G[0], pos[0][0], node_color=all_c[0], node_size=node_size)
-    edges = nx.draw_networkx_edges(all_G[0], pos[0][0], edge_color='#FFF')
-    ax = plt.gca()
+    # Initialize the matplotlib figure
+    fig, ax = plt.subplots(figsize=(8, 6))
     ax.set_facecolor(background_color)
     ax.axis("off")
     fig.set_facecolor(background_color)
     fig.tight_layout()
 
-    i = 0
-    j = 0
+    # Initial drawing of nodes and edges
+    nx.draw_networkx_nodes(
+        all_G[0], pos[0][0], node_color=all_c[0], node_size=node_size, ax=ax)
+    nx.draw_networkx_edges(all_G[0], pos[0][0], edge_color='#FFF', ax=ax)
+
+    i = 0  # Index for graphs
+    j = 0  # Step index within each graph
 
     def make_frame(t):
         nonlocal i, j
-        # update node positions
         ax.clear()
-        nodes = nx.draw_networkx_nodes(
-            all_G[i], pos[i][j], node_size=node_size, node_color=all_c[i])
-        edges = nx.draw_networkx_edges(all_G[i], pos[i][j], edge_color='#FFF')
+        ax.set_facecolor(background_color)
+        ax.axis("off")
+        fig.set_facecolor(background_color)
+
+        # Draw nodes and edges for the current frame
+        nx.draw_networkx_nodes(
+            all_G[i], pos[i][j], node_size=node_size, node_color=all_c[i], ax=ax)
+        nx.draw_networkx_edges(all_G[i], pos[i][j], edge_color='#FFF', ax=ax)
+
+        # Update indices for animation
         j += 1
         if j >= i_steps:
             j = 0
             i += 1
         i = min(i, len(all_G) - 1)
-        return mplfig_to_npimage(fig)
 
+        return fig_to_npimage(fig)
+
+    # Create the video clip
     animation = VideoClip(make_frame, duration=N / fps)
+
+    # Export the animation as a GIF
     animation.write_gif('animation.gif', fps=fps)
