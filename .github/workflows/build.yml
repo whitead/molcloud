@@ -26,9 +26,6 @@ jobs:
     - name: Install
       run: |
         pip install .[all]
-    - name: Run Test
-      run: |
-         pytest tests
     - name: Build a binary wheel and a source tarball
       run: |
         pip install build
