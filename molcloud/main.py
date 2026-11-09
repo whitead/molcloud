@@ -15,7 +15,7 @@ import click
 @click.option("--repeat", default=0, type=int, help="Place molecules multiple times to fill more space.")
 @click.option("--thresh", default=0.3, type=float, help="Threshold for keeping molecule at boundary.")
 def smiles(smiles_file, output_file, width, background_color, node_size, quiet, template, repeat, thresh):
-    with open(smiles_file, "r") as f:
+    with open(smiles_file, "r", encoding="utf-8") as f:
         smls = f.read().splitlines()
     plt.figure(figsize=(width, width), dpi=300)
     plot_molcloud(smls, background_color=background_color,
@@ -35,7 +35,7 @@ def rna(fasta_file, output_file, width, background_color, node_size, quiet):
     from .rna import plot_rnacloud
     fasta_texts = []
     fasta_text = ""
-    with open(fasta_file) as f:
+    with open(fasta_file, encoding="utf-8") as f:
         for line in f.readlines():
             if line.startswith(">"):
                 if fasta_text != "":
